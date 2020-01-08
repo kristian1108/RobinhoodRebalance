@@ -1,0 +1,6 @@
+venv/
+secret_settings.py
+test.py
+__pycache__/
+.idea/
+.DS_Store
