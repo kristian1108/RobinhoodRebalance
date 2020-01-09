@@ -20,7 +20,7 @@ def send_message(text='Default', to=CLIENT_NUMBER):
 
 def send_greeting(cl=True):
 
-    with open("last_rebalance.txt", "w") as file:
+    with open("last_greeting.txt", "w") as file:
         seconds = time.time()
         file.write(str(seconds) + "\n")
         file.close()

@@ -1,7 +1,6 @@
 import rebalance_utils as re
 import outreach_utils as out
 import api_utils as api
-import time
 from secret_settings import *
 
 out.send_greeting(cl=False)
