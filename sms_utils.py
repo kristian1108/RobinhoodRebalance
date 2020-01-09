@@ -31,8 +31,8 @@ def sms_reply():
 
             if out.check_recency():
                 resp.message("Great! Now proceeding.")
-                th = Thread(target=out.send_actions_alert())
-                th.start()
+                #th = Thread(target=out.send_actions_alert())
+                #th.start()
 
             else:
                 resp.message('Your trading session is not active right now.')
