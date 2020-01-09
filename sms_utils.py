@@ -24,15 +24,13 @@ def sms_reply():
 
     else:
         task = out.get_task(body)
-        resp.message('inside else')
 
         if task == 'proceed':
 
-            resp.message('inside proceed')
             if out.check_recency():
                 resp.message("Great! Now proceeding.")
 
-                #actions = out.send_actions_alert()
+                actions = out.send_actions_alert()
 
                 #with open("actions.txt", "w") as file:
                     #file.write(str(actions) + "\n")
