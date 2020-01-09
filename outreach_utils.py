@@ -85,7 +85,7 @@ def check_recency():
 
     now = time.time()
 
-    if now-last > 7000:
+    if now-last > 10:
         return False
     else:
         return True
