@@ -1,5 +1,6 @@
 from twilio.rest import Client
 from secret_settings import *
+import time
 
 account_sid = TWIL_ACCT_SID
 auth_token = TWIL_AUTH_TOKEN
@@ -18,6 +19,12 @@ def send_message(text='Default', to=CLIENT_NUMBER):
 
 
 def send_greeting(cl=True):
+
+    with open("last_rebalance.txt", "w") as file:
+        seconds = time.time()
+        file.write(str(seconds) + "\n")
+        file.close()
+
     if cl:
         send_message(text=client_greeting, to=CLIENT_NUMBER)
     else:
@@ -51,4 +58,11 @@ def send_order_notifications(confirmations, to=MY_NUMBER):
     b = send_message(message, to=to)
 
     return a, b
+
+
+def send_waiting_token(to=MY_NUMBER):
+    send_message('Waiting for token. Please go to https://bit.ly/2N9FTyH to send it.', to=to)
+    time.sleep(250)
+    send_message('Now fetching token.', to=to)
+
 

@@ -5,3 +5,7 @@ __pycache__/
 .idea/
 .DS_Store
 sms_utils.ini
+credentials.json
+token.pickle
+last_rebalance.txt
+

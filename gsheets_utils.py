@@ -4,12 +4,14 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from secret_settings import *
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 
 def get_secure_service():
+
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -30,23 +32,23 @@ def get_secure_service():
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
-    service = build('gmail', 'v1', credentials=creds)
+    service = build('sheets', 'v4', credentials=creds)
 
     return service
 
 
-def main():
+def get_token():
     service = get_secure_service()
-    query = 'from: notifications@robinhood.com subject:Your Email Verification Code'
 
-    # Call the Gmail API
-    results = service.users().messages().list(userId='me', q=query, maxResults=5, includeSpamTrash=True).execute()
-    messages = results.get('messages')
-    message_full = []
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+                                range=RANGE_NAME).execute()
 
-    for message in messages:
-        message_full.append(service.users().messages().get(userId='me', id=message['id'], format='full').execute())
+    values = result.get('values', [])
+    num_vals = len(values)
+    last_val = num_vals-1
+    return str(values[last_val][1]).strip('.')
 
 
 if __name__ == '__main__':
-    main()
+    print(get_token())

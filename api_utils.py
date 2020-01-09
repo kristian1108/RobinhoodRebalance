@@ -6,7 +6,7 @@ from secret_settings import *
 class TradingSession:
 
     def __init__(self):
-        login = r.login(LOGIN_EMAIL, LOGIN_PASSWORD, expiresIn=10000, by_sms=False)
+        login = r.login(LOGIN_EMAIL, LOGIN_PASSWORD, expiresIn=10, by_sms=False)
         self.holdings = r.build_holdings()
         self.securities = []
         self.prices = {}

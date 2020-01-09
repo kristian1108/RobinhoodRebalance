@@ -5,7 +5,6 @@ import time
 from secret_settings import *
 
 out.send_greeting(cl=False)
-time.sleep(5)
 
 actions = re.get_actions()
 
