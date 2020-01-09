@@ -1,6 +1,7 @@
 from twilio.rest import Client
 from secret_settings import *
 import time
+import rebalance_utils as re
 
 account_sid = TWIL_ACCT_SID
 auth_token = TWIL_AUTH_TOKEN
@@ -31,13 +32,17 @@ def send_greeting(cl=True):
         send_message(text=other_greeting, to=MY_NUMBER)
 
 
-def send_actions_alert(actions, to=MY_NUMBER):
+def send_actions_alert(to=MY_NUMBER):
     message = 'The following trades are now being placed: '
+
+    actions = re.get_actions()
 
     for sec, action in actions.items():
         message += sec+': '+str(action)+' '
 
-    return send_message(message, to=to)
+    send_message(message, to=to)
+
+    return actions
 
 
 def send_order_notifications(confirmations, to=MY_NUMBER):
@@ -85,7 +90,7 @@ def check_recency():
 
     now = time.time()
 
-    if now-last > 10:
+    if now-last > 120:
         return False
     else:
         return True
