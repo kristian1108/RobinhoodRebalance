@@ -4,6 +4,7 @@ from secret_settings import *
 import outreach_utils as out
 import api_utils as api
 import os
+import time
 
 app = Flask(__name__)
 
@@ -29,6 +30,7 @@ def sms_reply():
 
             if out.check_recency():
                 resp.message("Great! Now proceeding.")
+                time.sleep(5)
 
                 actions = out.send_actions_alert()
 
