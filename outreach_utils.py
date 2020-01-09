@@ -67,7 +67,7 @@ def send_waiting_token(to=MY_NUMBER):
 
 
 def get_task(body):
-    query = client.preview.understand.assistants(TWI_ASSISTANT) \
+    query = client.preview.understand.assistants(TWIL_ASSISTANT) \
         .queries.create(language='en-US', query=body)
 
     task = query.results.get('task')
