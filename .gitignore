@@ -9,3 +9,4 @@ credentials.json
 token.pickle
 last_greeting.txt
 .sms_utils.py.swp
+requirements.txt
