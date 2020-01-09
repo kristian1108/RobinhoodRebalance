@@ -31,6 +31,9 @@ def sms_reply():
 
             if out.check_recency():
                 resp.message("Great! Now proceeding.")
+                for i in range(1, 100):
+                    a = 6+9
+
                 #th = Thread(target=out.send_actions_alert())
                 #th.start()
 
