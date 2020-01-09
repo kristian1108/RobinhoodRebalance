@@ -67,7 +67,7 @@ def send_order_notifications(confirmations, to=MY_NUMBER):
 
 def send_waiting_token(to=MY_NUMBER):
     send_message('Waiting for token. Please go to https://bit.ly/2N9FTyH to send it.', to=to)
-    time.sleep(250)
+    time.sleep(30)
     send_message('Now fetching token.', to=to)
 
 
@@ -94,6 +94,17 @@ def check_recency():
         return False
     else:
         return True
+
+
+def send_confirmation():
+    send_message("Great! Now proceeding.")
+
+
+def send_token_conf(status):
+    if status:
+        send_message("Token successfully received!")
+    else:
+        send_message("Something broke.")
 
 
 

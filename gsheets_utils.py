@@ -47,7 +47,8 @@ def get_token():
     values = result.get('values', [])
     num_vals = len(values)
     last_val = num_vals-1
-    return str(values[last_val][1]).strip('.')
+
+    return str(values[last_val][1]).strip('.'), True
 
 
 if __name__ == '__main__':
