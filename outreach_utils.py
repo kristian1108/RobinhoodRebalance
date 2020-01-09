@@ -32,7 +32,7 @@ def send_greeting(cl=True):
         send_message(text=other_greeting, to=MY_NUMBER)
 
 
-def send_actions_alert(to=MY_NUMBER):
+def send_actions_alert(num=MY_NUMBER):
     message = 'The following trades are now being placed: '
 
     actions = re.get_actions()
@@ -40,7 +40,7 @@ def send_actions_alert(to=MY_NUMBER):
     for sec, action in actions.items():
         message += sec+': '+str(action)+' '
 
-    send_message(message, to=to)
+    send_message(message, to=num)
 
     return actions
 

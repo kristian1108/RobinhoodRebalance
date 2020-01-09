@@ -12,8 +12,7 @@ if args.Method == 'greeting':
     out.send_greeting(cl=False)
 
 elif args.Method == 'actions':
-    actions = re.get_actions()
-    out.send_actions_alert(actions)
+    out.send_actions_alert()
 
 
 
