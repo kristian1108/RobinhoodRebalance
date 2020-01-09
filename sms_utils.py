@@ -26,7 +26,8 @@ def sms_reply():
 
         task = query.results.get('task')
 
-        resp.message(task)
+        if task == 'proceed':
+            resp.message('making progress!')
 
     return str(resp)
 
