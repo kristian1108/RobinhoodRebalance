@@ -25,7 +25,6 @@ def sms_reply():
         task = out.get_task(body)
 
         if task == 'proceed':
-            resp.message(str(out.check_recency()))
             if out.check_recency():
                 resp.message("Ok let's go.")
             else:
