@@ -2,10 +2,7 @@ from flask import Flask, request, redirect
 from twilio.twiml.messaging_response import MessagingResponse
 from secret_settings import *
 import outreach_utils as out
-from threading import Thread
-import api_utils as api
 import os
-import time
 
 app = Flask(__name__)
 
@@ -31,11 +28,10 @@ def sms_reply():
 
             if out.check_recency():
                 resp.message("Great! Now proceeding.")
-                for i in range(1, 100):
-                    a = 6+9
+                pid = os.fork()
+                if pid == 0:
+                    os.system('python main.py actions')
 
-                #th = Thread(target=out.send_actions_alert())
-                #th.start()
 
             else:
                 resp.message('Your trading session is not active right now.')
