@@ -1,7 +1,8 @@
 from flask import Flask, request, redirect
 from twilio.twiml.messaging_response import MessagingResponse
 from secret_settings import *
-from outreach_utils import client
+import outreach_utils as out
+import time
 
 app = Flask(__name__)
 
@@ -21,13 +22,12 @@ def sms_reply():
         resp.message("Request refused. Have a nice day.")
 
     else:
-        query = client.preview.understand.assistants(TWI_ASSISTANT) \
-            .queries.create(language='en-US', query=body)
 
-        task = query.results.get('task')
+        task = out.get_task(body)
 
         if task == 'proceed':
-            resp.message('making progress!')
+            if out.check_recency():
+                resp.message("Ok let's go.")
 
     return str(resp)
 

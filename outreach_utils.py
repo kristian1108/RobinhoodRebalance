@@ -66,3 +66,25 @@ def send_waiting_token(to=MY_NUMBER):
     send_message('Now fetching token.', to=to)
 
 
+def get_task(body):
+    query = client.preview.understand.assistants(TWI_ASSISTANT) \
+        .queries.create(language='en-US', query=body)
+
+    task = query.results.get('task')
+
+    return task
+
+
+def check_recency():
+    with open('last_greeting.txt', 'r') as file:
+        last = float(file.read())
+
+    now = time.time()
+
+    if now-last > 7000:
+        return False
+    else:
+        return True
+
+
+
