@@ -8,4 +8,4 @@ sms_utils.ini
 credentials.json
 token.pickle
 last_greeting.txt
-
+.sms_utils.py.swp
