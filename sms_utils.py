@@ -29,7 +29,7 @@ def sms_reply():
             if out.check_recency():
                 resp.message("Ok let's go.")
             else:
-                print('Your trading session is not active right now.')
+                resp.message('Your trading session is not active right now.')
 
     return str(resp)
 
