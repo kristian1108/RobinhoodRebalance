@@ -18,13 +18,10 @@ def sms_reply():
     sender = request.values.get('From', None)
     resp = MessagingResponse()
 
-    resp.message("In the method")
-
     if sender != MY_NUMBER and sender != CLIENT_NUMBER:
         resp.message("Request refused. Have a nice day.")
 
     else:
-
         task = out.get_task(body)
 
         if task == 'proceed':

@@ -76,8 +76,12 @@ def get_task(body):
 
 
 def check_recency():
-    with open('last_greeting.txt', 'r') as file:
-        last = float(file.read())
+
+    try:
+        with open('last_greeting.txt', 'r') as file:
+            last = float(file.read())
+    except FileNotFoundError:
+        return False
 
     now = time.time()
 
