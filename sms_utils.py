@@ -24,22 +24,27 @@ def sms_reply():
 
     else:
         task = out.get_task(body)
+        resp.message('inside else')
 
         if task == 'proceed':
+
+            resp.message('inside proceed')
             if out.check_recency():
                 resp.message("Great! Now proceeding.")
 
-                actions = out.send_actions_alert()
+                #actions = out.send_actions_alert()
 
-                with open("actions.txt", "w") as file:
-                    file.write(str(actions) + "\n")
-                    file.close()
+                #with open("actions.txt", "w") as file:
+                    #file.write(str(actions) + "\n")
+                    #file.close()
 
                 resp.message("Do you approve these trades?")
 
             else:
                 resp.message('Your trading session is not active right now.')
 
+
+        """
         if task == 'approval':
             if out.check_recency():
                 resp.message('Ok, now executing.')
@@ -54,6 +59,7 @@ def sms_reply():
 
             else:
                 resp.message('Your trading session is not active right now.')
+        """
 
     return str(resp)
 
