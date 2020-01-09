@@ -51,3 +51,4 @@ def send_order_notifications(confirmations, to=MY_NUMBER):
     b = send_message(message, to=to)
 
     return a, b
+
