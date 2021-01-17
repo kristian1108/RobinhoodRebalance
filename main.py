@@ -36,14 +36,15 @@ if __name__ == '__main__':
     parser.add_argument('--cancel', action='store_true', help='Cancel all existing orders.')
     args = parser.parse_args()
 
+    out.send_greeting(which='self')
+    time.sleep(5)
+
     if args.cancel:
         out.send_message('Checking for orders to cancel...')
         api.TradingSession.close_open_orders()
 
     if args.execute:
-        out.send_greeting(which='self')
         save_actions()
-        time.sleep(5)
 
         with open('next_actions.json', 'r') as file:
             actions = json.load(file)
