@@ -37,7 +37,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.cancel:
-        out.send_message('Cancelling all orders.')
+        out.send_message('Checking for orders to cancel...')
         api.TradingSession.close_open_orders()
 
     if args.execute:
