@@ -61,7 +61,7 @@ class TradingSession:
 
         confirmation_message = 'The following orders have been successfully sent:\n'
         for sym, confirmation in confirmations.items():
-            confirmation_message += f"{sym}: {round(confirmation['quantity'],2)} shares @ ${round(confirmation['price'],2)} | Trigger {confirmation['trigger']} \n"
+            confirmation_message += f"{sym}: {round(float(confirmation['quantity']),2)} shares @ ${round(float(confirmation['price']),2)} | Trigger {confirmation['trigger']} \n"
 
         log.info('ORDERS SENT')
         log.info(confirmation_message)
