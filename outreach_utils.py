@@ -2,6 +2,9 @@ from secret_settings import *
 import requests
 import time
 import sys
+import logging as log
+
+log.basicConfig(filename='trading_log.log', level=log.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 telegram_host = 'https://api.telegram.org/bot'
 telegram_retrieve_path = '/getUpdates'
@@ -27,12 +30,15 @@ def send_greeting(which='self'):
 
 def wait_for_message(max_age=3):
     response = None
+    message_text = ''
+
+    log.info('Awaiting message from Telegram...')
 
     while not response:
-        message = get_most_recent_message_from_user(TELEGRAM_USERNAME)
+        response = get_most_recent_message_from_user(TELEGRAM_USERNAME)
         try:
-            message_text = message['message']['text']
-            timestamp = message['message']['date']
+            message_text = response['message']['text']
+            timestamp = response['message']['date']
             assert time.time() - timestamp < max_age
             if message_text.strip().lower() == 'not now':
                 send_message('Terminating the trading session. Will retry later.')
@@ -85,13 +91,13 @@ def get_most_recent_message_from_user(username):
     return filtered_messages[-1]
 
 
-def get_auth_token(login_email=LOGIN_EMAIL, retry_message=None, max_token_age=2):
+def get_auth_token(login_email=LOGIN_EMAIL, retry_message=None, max_age=2):
     if retry_message:
         send_message(retry_message)
     else:
         send_message(f"Attempting to login to {login_email}. Please send the auth token or reply 'not now' to terminate.")
 
-    return wait_for_message()
+    return wait_for_message(max_age)
 
 
 

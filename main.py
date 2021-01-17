@@ -5,18 +5,18 @@ import outreach_utils as out
 import argparse
 import api_utils as api
 import json
+import os
+import logging as log
+import time
 
-parser = argparse.ArgumentParser(description='Control execution of main.py')
+log.basicConfig(filename='trading_log.log', level=log.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
-parser.add_argument('--method', metavar='method', type=str, help='The method you wish to call.')
 
-args = parser.parse_args()
-
-if args.method == 'get_actions':
-    actions = re.get_actions()
+def save_actions():
+    proposed_actions = re.get_actions()
     save_json = []
 
-    for security, action in actions.items():
+    for security, action in proposed_actions.items():
         save_json.append(
             {
                 'security': security,
@@ -24,35 +24,36 @@ if args.method == 'get_actions':
             }
         )
 
-    out.send_actions(actions)
+    out.send_actions(proposed_actions)
 
     with open('next_actions.json', 'w+') as file:
         json.dump(save_json, file)
 
 
-if args.method == 'self_greeting':
-    out.send_greeting(which='self')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Control execution of main.py')
+    parser.add_argument('--execute', action='store_true', help='Run the trading algorithm to rebalance.')
+    parser.add_argument('--cancel', action='store_true', help='Cancel all existing orders.')
+    args = parser.parse_args()
 
-elif args.method == 'actions':
-    out.send_actions_alert()
+    if args.cancel:
+        out.send_message('Cancelling all orders.')
+        api.TradingSession.close_open_orders()
 
-elif args.method == 'print':
-    acct = api.TradingSession()
-    acct.print_portfolio_info()
-    print(re.get_actions())
+    if args.execute:
+        out.send_greeting(which='self')
+        save_actions()
+        time.sleep(5)
 
-"""
+        with open('next_actions.json', 'r') as file:
+            actions = json.load(file)
 
-actions = re.get_actions()
+        if out.get_trading_confirmation():
+            log.info('Sending orders.')
+            out.send_greeting('Sending orders now...')
+            confirmations = api.TradingSession.execute_trades(actions)
 
-out.send_actions_alert(actions, to=MY_NUMBER)
-confirmations = api.TradingSession.rebalance(actions)
-
-out.send_order_notifications(confirmations, to=MY_NUMBER)
-
-"""
-
-
+        os.remove('next_actions.json')
 
 
 
