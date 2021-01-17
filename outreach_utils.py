@@ -59,7 +59,9 @@ def get_trading_confirmation():
     affirmative = ['yes', 'y', 'ye', 'yah', 'yeah', 'sure', 'go for it', 'proceed']
     if confirmation.strip().lower() in affirmative:
         return True
-    return False
+    else:
+        send_message('No worries, terminating now and will retry later.')
+        return False
 
 
 def send_actions(actions):
