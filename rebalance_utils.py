@@ -1,101 +1,89 @@
 import api_utils as api
 from random import randint
 from secret_settings import *
+import logging as log
+
+log.basicConfig(filename='trading_log.log', level=log.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
-def compute_total_cost(pr, lt_actions, bond_actions):
+def compute_total_cost(action_needed):
     total_cost = 0.0
 
-    for sec, action in bond_actions.items():
-        total_cost += float(pr[sec]) * action
-
-    for sec, action in lt_actions.items():
-        total_cost += float(pr[sec]) * action
+    for sec, action in action_needed.items():
+        total_cost += action
 
     return total_cost
 
 
+def sync_target_and_current_securities(target_securities, current_equity):
+    current_securities = set(current_equity.keys())
+    for security in target_securities:
+        if security not in current_securities:
+            current_equity[security] = 0
+
+
 def get_actions():
+    log.info('')
+    log.info('***RETRIEVING ACTIONS***')
 
     ts = api.TradingSession()
 
-    portfolio = ts.get_portfolio_info()
-    current_securities = portfolio[0]
-    prices = portfolio[1]
-    total_aum = portfolio[2]
-    buying_power = portfolio[3]
-    shares_owned = portfolio[4]
+    securities, prices, invested_value, buying_power, current_equity = ts.get_portfolio_info()
+    acct_value = invested_value + buying_power
+    invested_value = acct_value*INVESTED_PORTION
 
-    BOND_VALUE = total_aum - LT_VALUE
-    INTENT_SECURITIES = BOND_SECURITIES + LT_SECURITIES
-
-    anomalies = [sec for sec in current_securities if sec not in INTENT_SECURITIES]
+    anomalies = [sec for sec in securities if sec not in SECURITIES]
 
     if anomalies:
-        print('Your invested securities and your intended securities do not match.')
-        print('You own ' + str(anomalies) + ', not listed your intended securities.')
+        log.warning('Your invested securities and your intended securities do not match.')
+        log.warning('You own ' + str(anomalies) + ', not listed your intended securities.')
 
-    balanced_bond_shares = {}
-    balanced_lt_shares = {}
+    balanced_allocations = {}
+    action_needed = {}
 
-    bond_action_needed = {}
-    lt_action_needed = {}
+    for sec, alloc in ALLOCATIONS.items():
+        balanced = invested_value*alloc
+        balanced_allocations[sec] = balanced
 
-    for sec, alloc in BOND_ALLOCATIONS.items():
-        dollar_alloc = alloc*BOND_VALUE
-        shares = int(dollar_alloc/float(prices[sec]))+1
-        balanced_bond_shares[sec] = shares
+    sync_target_and_current_securities(SECURITIES, current_equity)
 
-    for sec, alloc in LT_ALLOCATIONS.items():
-        dollar_alloc = alloc*LT_VALUE
-        shares = int(dollar_alloc / float(prices[sec]))+1
-        balanced_lt_shares[sec] = shares
+    for sec in SECURITIES:
+        action_needed[sec] = balanced_allocations[sec] - float(current_equity[sec])
 
-    for sec in BOND_SECURITIES:
-        bond_action_needed[sec] = int(balanced_bond_shares[sec] - float(shares_owned[sec]))
+    total_act_cost = compute_total_cost(action_needed)
+    max_cost = buying_power-TRADING_BUFFER
 
-    for sec in LT_SECURITIES:
-        lt_action_needed[sec] = int(balanced_lt_shares[sec] - float(shares_owned[sec]))
+    log.info(f'Total Trade Cost: {total_act_cost} | Max Allowed Cost : {max_cost} | Difference: {total_act_cost - max_cost}')
 
-    total_act_cost = compute_total_cost(prices, lt_action_needed, bond_action_needed)
+    reduce_trade_cost_by = total_act_cost-max_cost
+    decrease_val = reduce_trade_cost_by / 3
 
-    while total_act_cost > buying_power-TRADING_BUFFER:
-        num_sec = len(INTENT_SECURITIES)
-        decrease = INTENT_SECURITIES[randint(0, num_sec-1)]
+    while total_act_cost > max_cost+0.05:
+        num_sec = len(SECURITIES)
 
-        lt = False
-        bond = False
+        decrease = SECURITIES[randint(0, num_sec - 1)]
 
-        if decrease in LT_SECURITIES:
-            lt = True
-        else:
-            bond = True
+        while float(current_equity[decrease]) <= decrease_val:
+            decrease = SECURITIES[randint(0, num_sec-1)]
 
-        if lt and lt_action_needed[decrease] > 0:
-            lt_action_needed[decrease] -= 1
-        elif bond and bond_action_needed[decrease] > 0:
-            bond_action_needed[decrease] -= 1
-        else:
-            pass
+        log.info(f'Reducing the value of {decrease} by {decrease_val}')
+        action_needed[decrease] -= decrease_val
 
-        total_act_cost = compute_total_cost(prices, lt_action_needed, bond_action_needed)
+        total_act_cost = compute_total_cost(action_needed)
+        log.info(f'Total Trade Cost: {total_act_cost}')
 
-    agg_actions = {}
+    sorted_actions = {k: v for k, v in sorted(action_needed.items(), key=lambda item: item[1])}
 
-    for sec, action in lt_action_needed.items():
-        try:
-            agg_actions[sec] += action
-        except KeyError:
-            agg_actions[sec] = action
-    for sec, action in bond_action_needed.items():
-        try:
-            agg_actions[sec] += action
-        except KeyError:
-            agg_actions[sec] = action
+    log.info(f'Total Account Value: {acct_value}')
+    log.info(f'Total Invested Value: {invested_value}')
+    log.info(f'Trading Buffer: {TRADING_BUFFER}')
+    log.info(f'Buying Power: {buying_power}')
+    log.info(f'Total Cost Of Trades: {sum(sorted_actions.values())}')
+    log.info(f'Cash Left Over After Trades: {buying_power-sum(sorted_actions.values())}')
 
-    agg_actions = {k: v for k, v in sorted(agg_actions.items(), key=lambda item: item[1])}
+    log.info('***DONE RETRIEVING ACTIONS***')
 
-    return agg_actions
+    return sorted_actions
 
 
 

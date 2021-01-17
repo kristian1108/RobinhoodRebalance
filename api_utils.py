@@ -10,7 +10,7 @@ class TradingSession:
         self.holdings = r.build_holdings()
         self.securities = []
         self.prices = {}
-        self.shares = {}
+        self.equity = {}
         self.profile = r.profiles.load_portfolio_profile()
         self.acct = r.profiles.load_account_profile()
 
@@ -19,13 +19,29 @@ class TradingSession:
             for sec, info in self.holdings.items():
                 self.securities.append(sec)
                 self.prices[sec] = info['price']
-                self.shares[sec] = info['quantity']
+                self.equity[sec] = info['equity']
 
         buying_power = float(self.acct['portfolio_cash'])
-        total_aum = float(self.profile['market_value'])
+        invested_value = float(self.profile['market_value'])
 
-        return self.securities, self.prices, total_aum, buying_power, self.shares
+        return self.securities, self.prices, invested_value, buying_power, self.equity
 
+    def print_portfolio_info(self):
+        securities, prices, invested, buying, equity = self.get_portfolio_info()
+        TradingSession.print_with_emphasis('SECURITIES')
+        print(securities)
+        TradingSession.print_with_emphasis('PRICES')
+        print(prices)
+        TradingSession.print_with_emphasis('TOTAL INVESTED VALUE')
+        print(invested)
+        TradingSession.print_with_emphasis('BUYING POWER')
+        print(buying)
+        TradingSession.print_with_emphasis('EQUITY')
+        print(equity)
+
+    @staticmethod
+    def print_with_emphasis(s):
+        print(f'********** {s} **********')
 
     @staticmethod
     def close_open_orders():
@@ -34,7 +50,6 @@ class TradingSession:
     @staticmethod
     def rebalance(actions):
         confirmations = {}
-
         for sec, action in actions.items():
             if action > 0:
                 print('Buying ' + str(action) + ' share(s) of ' + sec)

@@ -1,110 +1,99 @@
-from twilio.rest import Client
 from secret_settings import *
+import requests
 import time
-import rebalance_utils as re
+import sys
 
-account_sid = TWIL_ACCT_SID
-auth_token = TWIL_AUTH_TOKEN
-
-client = Client(account_sid, auth_token)
-
-
-def send_message(text='Default', to=CLIENT_NUMBER):
-    message = client.messages.create(
-        body=text,
-        from_=TWILIO_NUMBER,
-        to=to
-    )
-
-    return message.sid
+telegram_host = 'https://api.telegram.org/bot'
+telegram_retrieve_path = '/getUpdates'
+telegram_send_path = '/sendMessage'
 
 
-def send_greeting(cl=True):
-
-    with open("last_greeting.txt", "w") as file:
-        seconds = time.time()
-        file.write(str(seconds) + "\n")
-        file.close()
-
-    if cl:
-        send_message(text=client_greeting, to=CLIENT_NUMBER)
-    else:
-        send_message(text=other_greeting, to=MY_NUMBER)
+def build_telegram_url(action='send'):
+    if action == 'send':
+        return telegram_host + TELEGRAM_BOT_TOKEN + telegram_send_path
+    elif action == 'retrieve':
+        return telegram_host + TELEGRAM_BOT_TOKEN + telegram_retrieve_path
 
 
-def send_actions_alert(num=MY_NUMBER):
-    message = 'The following trades are now being placed: '
-
-    actions = re.get_actions()
-
-    for sec, action in actions.items():
-        message += sec+': '+str(action)+' '
-
-    send_message(message, to=num)
-
-    return actions
+def send_message(text='Default', to=TELEGRAM_CHAT_ID):
+    url = build_telegram_url()
+    requests.post(url=url, params={'chat_id': to, 'text': text})
 
 
-def send_order_notifications(confirmations, to=MY_NUMBER):
-    success = []
-    failure = []
-    order_ids = []
+def send_greeting(which='self'):
+    if which == 'self':
+        send_message(SELF_GREETING)
 
-    for sec, result in confirmations.items():
+
+def wait_for_message(max_age=3):
+    response = None
+
+    while not response:
+        message = get_most_recent_message_from_user(TELEGRAM_USERNAME)
         try:
-            order_ids.append(result['id'])
-            success.append(sec)
+            message_text = message['message']['text']
+            timestamp = message['message']['date']
+            assert time.time() - timestamp < max_age
+            if message_text.strip().lower() == 'not now':
+                send_message('Terminating the trading session. Will retry later.')
+                sys.exit(0)
         except KeyError:
-            failure.append(sec)
+            send_message('Something is wrong with the message keys. Terminating now and will retry later.')
+            sys.exit(1)
+        except AssertionError:
+            response = None
+        time.sleep(0.1)
 
-    message = 'These securities were successfully ordered: ' + str(success)
-    a = send_message(message, to=to)
-    message = 'These securities failed: ' + str(failure)
-    b = send_message(message, to=to)
-
-    return a, b
-
-
-def send_waiting_token(to=MY_NUMBER):
-    send_message('Waiting for token. Please go to https://bit.ly/2N9FTyH to send it.', to=to)
-    time.sleep(30)
-    send_message('Now fetching token.', to=to)
+    return message_text
 
 
-def get_task(body):
-    query = client.preview.understand.assistants(TWIL_ASSISTANT) \
-        .queries.create(language='en-US', query=body)
-
-    task = query.results.get('task')
-
-    return task
-
-
-def check_recency():
-
-    try:
-        with open('last_greeting.txt', 'r') as file:
-            last = float(file.read())
-    except FileNotFoundError:
-        return False
-
-    now = time.time()
-
-    if now-last > 120:
-        return False
-    else:
+def get_trading_confirmation():
+    send_message('Would you like to proceed with the trades? (y/n)')
+    confirmation = wait_for_message()
+    affirmative = ['yes', 'y', 'ye', 'yah', 'yeah', 'sure', 'go for it', 'proceed']
+    if confirmation.strip().lower() in affirmative:
         return True
+    return False
 
 
-def send_confirmation():
-    send_message("Great! Now proceeding.")
+def send_actions(actions):
+    action_message = 'The following trades are proposed:\n'
+    for sec, action in actions.items():
+        action = round(float(action),2)
+        if action > 0:
+            action_string = f'+${action}'
+        elif action < 0:
+            action_string = f'-${action}'
+        else:
+            action_string = 'No Change'
+
+        action_message += f'{sec}: {action_string}\n'
+    send_message(action_message)
 
 
-def send_token_conf(status):
-    if status:
-        send_message("Token successfully received!")
+def filter_messages_by_username(username, messages):
+    filtered_messages = []
+    for message in messages:
+        if message['message']['from'].get('username', '-1') == username:
+            filtered_messages.append(message)
+    return filtered_messages
+
+
+def get_most_recent_message_from_user(username):
+    messages = requests.get(build_telegram_url(action='retrieve')).json()
+    filtered_messages = filter_messages_by_username(username, messages['result'])
+    return filtered_messages[-1]
+
+
+def get_auth_token(login_email=LOGIN_EMAIL, retry_message=None, max_token_age=2):
+    if retry_message:
+        send_message(retry_message)
     else:
-        send_message("Something broke.")
+        send_message(f"Attempting to login to {login_email}. Please send the auth token or reply 'not now' to terminate.")
+
+    return wait_for_message()
+
+
 
 
 
